@@ -1,0 +1,54 @@
+###########
+# Modules #
+###########
+
+#zmodule k
+zmodule git
+zmodule fzf
+zmodule input
+zmodule direnv
+zmodule archive
+zmodule utility
+zmodule termtitle
+zmodule environment
+
+zmodule joke/zim-yq
+zmodule joke/zim-helm
+zmodule joke/zim-kubectl
+zmodule joke/zim-github-cli
+
+####################
+# Modules (Custom) #
+####################
+
+zmodule steelshot/dotfiles
+
+zmodule Thearas/zsh-watch
+zmodule none9632/zsh-sudo
+zmodule amogus07/zsh-command-not-found
+
+zmodule ohmyzsh/ohmyzsh --use degit --source lib/history.zsh
+
+###########
+# Theming #
+###########
+
+zmodule trapd00r/LS_COLORS --source lscolors.sh
+zmodule romkatv/powerlevel10k --use degit
+
+###############
+# Completions #
+###############
+
+zmodule zsh-users/zsh-completions --fpath src
+zmodule MenkeTechnologies/zsh-more-completions
+
+zmodule completion
+
+#############
+# Last Init #
+#############
+
+zmodule 3v1n0/zsh-bash-completions-fallback
+zmodule zdharma-continuum/fast-syntax-highlighting
+zmodule Aloxaf/fzf-tab
