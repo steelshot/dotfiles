@@ -2,7 +2,6 @@
 # Modules #
 ###########
 
-#zmodule k
 zmodule git
 zmodule fzf
 zmodule input
