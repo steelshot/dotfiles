@@ -49,5 +49,5 @@ zmodule completion
 #############
 
 zmodule 3v1n0/zsh-bash-completions-fallback
-zmodule zdharma-continuum/fast-syntax-highlighting
+zmodule zsh-users/zsh-syntax-highlighting
 zmodule Aloxaf/fzf-tab
