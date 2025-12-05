@@ -16,8 +16,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-for sh in "$(dirname "$0")/../dotfiles/".*; do
-  if ! diff "$sh" "$HOME/$(basename "$sh")" >/dev/null 2>&1; then
-    echo -e "$(basename "$sh") \033[0;31mis outdated\033[0m"
-  fi
-done
+if [[ -z "$skip_dotfile_compare" ]]; then
+  for sh in "$(dirname "$0")/../dotfiles/".*; do
+    if ! diff "$sh" "$HOME/$(basename "$sh")" >/dev/null 2>&1; then
+      echo -e "$(basename "$sh") \033[0;31mis outdated\033[0m"
+    fi
+  done
+fi
