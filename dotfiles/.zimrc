@@ -26,8 +26,6 @@ zmodule Thearas/zsh-watch
 zmodule none9632/zsh-sudo
 zmodule amogus07/zsh-command-not-found
 
-zmodule ohmyzsh/ohmyzsh --use degit --source lib/history.zsh
-
 ###########
 # Theming #
 ###########
