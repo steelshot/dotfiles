@@ -47,18 +47,11 @@ setopt no_bg_nice     # don't lower priority of background jobs
 setopt no_check_jobs  # no job status report on shell exit
 setopt no_hup         # don't send SIGHUP to jobs on shell exit
 
-## History
-(( ! ${+HISTFILE} )) && HISTFILE="$HOME/.zsh_history"
+HISTFILE=/dev/null
 (( HISTSIZE < 50000 )) && HISTSIZE=50000
-(( SAVEHIST < 10000 )) && SAVEHIST=10000
+SAVEHIST=0
 
-setopt extended_history       # record timestamp of command in HISTFILE
-setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
-setopt hist_find_no_dups      # don't display duplicates when searching history
-setopt hist_ignore_all_dups   # remove all older duplicate entries from history
-setopt hist_ignore_space      # ignore commands that start with space
-setopt hist_verify            # show command with history expansion to user before running it
-setopt share_history          # share command history data
+setopt hist_verify
 
 ## Module pre-init configuration
 
