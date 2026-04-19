@@ -42,13 +42,6 @@ zstyle ':zim' disable-version-check yes
 # Module configuration
 # --------------------
 
-# CLI tools to generate and cache zsh completions for.
-# Format: tool -> arguments passed to tool to produce zsh completion script
-typeset -gA _ZSH_TOOL_COMPLETIONS=(
-  yq      "shell-completion zsh"
-  gh      "completion -s zsh"
-  helm    "completion zsh"
-)
 
 # Append `../` to your input for each `.` you type after an initial `..`
 #zstyle ':zim:input' double-dot-expand yes
