@@ -26,6 +26,9 @@
 zmodload zsh/parameter  # exposes $history, $HISTCMD
 zmodload zsh/datetime   # strftime, $EPOCHSECONDS
 
+## Autoloaded functions
+autoload -Uz add-zsh-hook
+
 ## Changing directories
 setopt auto_cd           # type a directory name to cd into it
 setopt auto_pushd        # cd pushes old directory onto the stack

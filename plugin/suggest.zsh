@@ -58,5 +58,4 @@ _zsh_suggest_better() {
   print -P "%F{244}hint:%f %B$first%b → consider %F{6}%B$better%b%f" >/dev/tty
 }
 
-autoload -Uz add-zsh-hook
 add-zsh-hook preexec _zsh_suggest_better
