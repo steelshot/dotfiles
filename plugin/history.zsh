@@ -23,14 +23,8 @@
 #
 
 ## History wrapper
-# `-i` opens atuin's TUI. `-c` wipes all history with confirmation
+# `-c` wipes all history (atuin DB + current session) with confirmation.
 function history() {
-  if [[ $1 == -i ]]; then
-    (( ${+commands[atuin]} )) || { print -Pu2 "%F{red}history: -i requires atuin%f"; return 1 }
-    atuin search -i
-    return
-  fi
-
   if [[ $1 == -c ]]; then
     print -n "This will wipe all history. Continue? [y/N] "
     local REPLY
@@ -42,27 +36,19 @@ function history() {
     print -P "%F{green}History cleared.%f"
     return
   fi
-
-  (( ${+commands[atuin]} )) && _dotfiles_history_reload
   builtin fc -l "${@:-1}"
 }
 
-## Seed $history from atuin
-# Self-removing precmd hook seeds on first prompt (masked by p10k instant-prompt);
-# `history` re-calls in-process for fresh reads.
-_dotfiles_history_reload() {
-  local tmp
-  tmp=$(mktemp) || return
-  atuin history list --cmd-only --reverse 2>/dev/null > "$tmp"
-  fc -R "$tmp"
-  rm -f "$tmp"
+## Seed $history from atuin on first prompt (hook self-removes).
+## p10k instant-prompt hides the load time.
+_dotfiles_history_seed() {
+  add-zsh-hook -d precmd _dotfiles_history_seed
+  local line
+  while IFS= read -r line; do
+    [[ -n $line ]] && print -s -- "$line"
+  done < <(atuin history list --reverse --format '{command}' 2>/dev/null)
 }
 
 if (( ${+commands[atuin]} )); then
-  _dotfiles_history_load_once() {
-    add-zsh-hook -d precmd _dotfiles_history_load_once
-    _dotfiles_history_reload
-  }
-  autoload -Uz add-zsh-hook
-  add-zsh-hook precmd _dotfiles_history_load_once
+  add-zsh-hook precmd _dotfiles_history_seed
 fi
