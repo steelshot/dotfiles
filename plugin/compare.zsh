@@ -26,7 +26,7 @@
 
 () {
   local sh name home
-  for sh in "$1"/../dotfiles/.*(.); do
+  for sh in "$1"/dotfiles/.*(.); do
     name="${sh:t}"
     home="$HOME/$name"
     if [[ ! -e "$home" ]]; then
@@ -39,4 +39,4 @@
       fi
     fi
   done
-} "${0:h}"
+} "${_DOTFILES_MODULE_ROOT}"
