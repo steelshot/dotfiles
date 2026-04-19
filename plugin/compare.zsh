@@ -24,17 +24,19 @@
 
 [[ -n "$skip_dotfile_compare" ]] && return
 
-local sh name home
-for sh in "${0:h}"/../dotfiles/.*(.); do
-  name="${sh:t}"
-  home="$HOME/$name"
-  if [[ ! -e "$home" ]]; then
-    print -P "$name %F{red}is missing%f"
-  elif ! command cmp -s "$sh" "$home"; then
-    if [[ "$sh" -nt "$home" ]]; then
-      print -P "$name %F{red}is outdated%f"
-    else
-      print -P "$name %F{yellow}differs%f"
+() {
+  local sh name home
+  for sh in "$1"/../dotfiles/.*(.); do
+    name="${sh:t}"
+    home="$HOME/$name"
+    if [[ ! -e "$home" ]]; then
+      print -P "$name %F{red}is missing%f"
+    elif ! command cmp -s "$sh" "$home"; then
+      if [[ "$sh" -nt "$home" ]]; then
+        print -P "$name %F{red}is outdated%f"
+      else
+        print -P "$name %F{yellow}differs%f"
+      fi
     fi
-  fi
-done
+  done
+} "${0:h}"
