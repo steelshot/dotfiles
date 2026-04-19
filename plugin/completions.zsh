@@ -22,19 +22,32 @@
 # SOFTWARE.
 #
 
-[[ -n "$skip_dotfile_compare" ]] && return
+(( ${#_ZSH_TOOL_COMPLETIONS} == 0 )) && return
 
-local sh name home
-for sh in "${0:h}"/../dotfiles/.*(.); do
-  name="${sh:t}"
-  home="$HOME/$name"
-  if [[ ! -e "$home" ]]; then
-    print -P "$name %F{red}is missing%f"
-  elif ! command cmp -s "$sh" "$home"; then
-    if [[ "$sh" -nt "$home" ]]; then
-      print -P "$name %F{red}is outdated%f"
-    else
-      print -P "$name %F{yellow}differs%f"
+_zsh_setup_completions() {
+  local compdir="${0:h:h}/functions"
+  local tool subcmd compfile generated=0
+
+  # fpath needs the dir even before it exists; compinit handles missing dirs.
+  [[ -z ${fpath[(r)$compdir]} ]] && fpath=("$compdir" $fpath)
+
+  for tool in ${(@k)_ZSH_TOOL_COMPLETIONS}; do
+    (( ${+commands[$tool]} )) || continue
+    subcmd="${_ZSH_TOOL_COMPLETIONS[$tool]}"
+    compfile="${compdir}/_${tool}"
+    [[ -e $compfile && $compfile -nt ${commands[$tool]} ]] && continue
+
+    [[ -d $compdir ]] || mkdir -p "$compdir" || return 1
+    if ${commands[$tool]} ${(z)subcmd} >| "$compfile"; then
+      print -P "%F{244}* Regenerated completions for %f%B${tool}%b%F{244}.%f"
+      generated=1
     fi
-  fi
-done
+  done
+
+  (( generated )) && (( $+functions[compinit] )) && \
+    compinit -u -d "${ZSH_COMPDUMP:-${ZDOTDIR:-$HOME}/.zcompdump}"
+}
+
+_zsh_setup_completions
+unset -f _zsh_setup_completions
+unset _ZSH_TOOL_COMPLETIONS
