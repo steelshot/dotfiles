@@ -1,66 +1,127 @@
 #!/usr/bin/env zsh
 
 #
-# Copyright (c) 2025 Džiugas Eiva GPL-3.0-only
+# Copyright (c) 2026 Džiugas Eiva
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public Licence as published by
-# the Free Software Foundation version 3 of the Licence.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public Licence for more details.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# You should have received a copy of the GNU General Public Licence
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 #
 
 ## History wrapper
-function omz_history {
-  # parse arguments and remove from $@
-  local clear list stamp REPLY
-  zparseopts -E -D c=clear l=list f=stamp E=stamp i=stamp t:=stamp
+# With -i, opens fzf: Enter = use, Del = delete (multi-select).
+
+# Strip leading whitespace and trailing * from "  EVT[*]  CMD..." -> bare event number.
+_zsh_history_evt() {
+  local line=$1
+  line=${line##[[:space:]]##}
+  line=${line%%[[:space:]]*}
+  print -r -- ${line%\*}
+}
+
+function history() {
+  local -a clear interactive session help
+  zparseopts -E -D c=clear i=interactive s=session h=help -help=help
+
+  if [[ -n "$help" ]]; then
+    print -P "%Busage:%b history [-c] [-i [-s]] [-h|--help]"
+    print
+    print -P "%BOptions:%b"
+    print "  -c           clear history"
+    print "  -i           interactive fzf picker (Enter = use, Del = delete)"
+    print "  -s           with -i, restrict to the current session"
+    print "  -h, --help   show this help"
+    return 0
+  fi
 
   if [[ -n "$clear" ]]; then
-    # if -c provided, clobber the history file
-
-    # confirm action before deleting history
-    print -nu2 "This action will irreversibly delete your command history. Are you sure? [y/N] "
-    builtin read -E
-    [[ "$REPLY" = [yY] ]] || return 0
-
-    print -nu2 >| "$HISTFILE"
+    : >| "$HISTFILE"
     fc -p "$HISTFILE"
+    return
+  fi
 
-    print -u2 History file deleted.
-  elif [[ $# -eq 0 ]]; then
-    # if no arguments provided, show full history starting from 1
-    builtin fc "${stamp[@]}" -l 1
-  else
-    # otherwise, run `fc -l` with a custom format
-    builtin fc "${stamp[@]}" -l "$@"
+  if [[ -z "$interactive" ]]; then
+    if (( $# )); then
+      builtin fc -l "$@"
+    else
+      builtin fc -l 1
+    fi
+    return
+  fi
+
+  if (( ! ${+commands[fzf]} )); then
+    print -Pu2 "%F{red}history: -i requires fzf%f"
+    return 1
+  fi
+
+  local -a fc_opts=()
+  [[ -n "$session" ]] && fc_opts=(-I)
+
+  local out
+  out=$(builtin fc -lr "${fc_opts[@]}" 1 | \
+    fzf --no-sort --multi --expect=del --query="${LBUFFER:-}" \
+        --header='enter: use   del: delete') || return
+
+  local key=${out%%$'\n'*}
+  local rest=${out#*$'\n'}
+  [[ -z $rest || ( $rest == $out && -z $key ) ]] && return
+
+  if [[ -z $key ]]; then
+    local first=${rest%%$'\n'*}
+    print -z -- "$history[$(_zsh_history_evt "$first")]"
+    return
+  fi
+
+  # Batch all removals into a single fc -W/fc -R cycle.
+  local line evt cmd
+  local -a patterns
+  while IFS= read -r line; do
+    [[ -z $line ]] && continue
+    evt=$(_zsh_history_evt "$line")
+    cmd=$history[$evt]
+    [[ -z $cmd ]] && continue
+    print -P "%F{244}Removing history entry:%f"
+    print -r "  ${cmd}"
+    patterns+=("${(b)cmd}")
+  done <<< "$rest"
+
+  if (( ${#patterns} )); then
+    local HISTORY_IGNORE="(${(j:|:)patterns})"
+    fc -W
+    fc -R "$HISTFILE"
   fi
 }
 
-# Timestamp format
-case ${HIST_STAMPS-} in
-  "mm/dd/yyyy") alias history='omz_history -f' ;;
-  "dd.mm.yyyy") alias history='omz_history -E' ;;
-  "yyyy-mm-dd") alias history='omz_history -i' ;;
-  "") alias history='omz_history' ;;
-  *) alias history="omz_history -t '$HIST_STAMPS'" ;;
-esac
 
-## History file configuration
-[ -z "$HISTFILE" ] && HISTFILE="$HOME/.zsh_history"
-[ "$HISTSIZE" -lt 50000 ] && HISTSIZE=50000
-[ "$SAVEHIST" -lt 10000 ] && SAVEHIST=10000
+## Don't save commands that returned 127 (command not found).
+# Uses precmd rather than zshaddhistory because $? at zshaddhistory time
+# reflects the previous command, not the one just entered.
+_zsh_history_filter_127() {
+  local last_status=$?
+  (( last_status == 127 )) || return 0
 
-## History command configuration
-setopt extended_history       # record timestamp of command in HISTFILE
-setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
-setopt hist_ignore_dups       # ignore duplicated commands history list
-setopt hist_ignore_space      # ignore commands that start with space
-setopt hist_verify            # show command with history expansion to user before running it
-setopt share_history          # share command history data
+  # $history[$HISTCMD] is the exact last command; fc -ln -1 can return multiple entries.
+  local last_cmd=$history[$HISTCMD]
+  [[ -z $last_cmd ]] && return
+
+  local HISTORY_IGNORE="${(b)last_cmd}"
+  fc -W
+  fc -R "$HISTFILE"
+}
+
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _zsh_history_filter_127
