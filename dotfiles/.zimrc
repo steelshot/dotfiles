@@ -25,10 +25,10 @@ zmodule steelshot/dotfiles
 
 zmodule none9632/zsh-sudo
 zmodule amogus07/zsh-command-not-found
-zmodule Tarrasch/zsh-bd
+zmodule Tarrasch/zsh-bd --source bd.zsh
 zmodule olets/zsh-abbr --use git
 zmodule MichaelAquilina/zsh-you-should-use
-zmodule ael-code/zsh-colored-man-pages
+zmodule ael-code/zsh-colored-man-pages --source colored-man-pages.plugin.zsh
 zmodule wfxr/forgit
 
 # Theming
