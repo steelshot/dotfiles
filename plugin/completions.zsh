@@ -1,5 +1,4 @@
 #!/usr/bin/env zsh
-
 #
 # Copyright (c) 2026 Džiugas Eiva
 #
@@ -22,17 +21,27 @@
 # SOFTWARE.
 #
 
-if [[ -z "$skip_dotfile_compare" ]]; then
-  (
-    for sh in "${0:h}"/../dotfiles/.*(.); do
-      name="${sh:t}"
-      if ! diff "$sh" "$HOME/$name" >/dev/null 2>&1; then
-        if [[ "$sh" -nt "$HOME/$name" ]]; then
-          print -P "$name %F{red}is outdated%f"
-        else
-          print -P "$name %F{yellow}differ%f"
-        fi
+# shellcheck disable=SC2154,SC2086,SC2296,SC2034,SC2043  # zsh-specific syntax: parameter flags, commands assoc array
+
+
+
+(( ${#_ZSH_TOOL_COMPLETIONS} == 0 )) && return
+
+(
+  compdir="${0:h:h}/functions"
+  mkdir -p "$compdir"
+
+  # shellcheck disable=SC2043
+  for tool in ${(@k)_ZSH_TOOL_COMPLETIONS}; do
+    subcmd="${_ZSH_TOOL_COMPLETIONS[$tool]}"
+    if command -v "$tool" >/dev/null 2>&1; then
+      compfile="${compdir}/_${tool}"
+      if [[ ! -e "$compfile" || "$compfile" -ot "${commands[$tool]}" ]]; then
+        $tool ${(z)subcmd} >| "$compfile" \
+          && print -P "%F{244}* Regenerated completions for %f%B${tool}%b%F{244}.%f"
       fi
-    done
-  )
-fi
+    fi
+  done
+)
+
+unset _ZSH_TOOL_COMPLETIONS

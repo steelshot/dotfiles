@@ -1,34 +1,36 @@
-###########
-# Modules #
-###########
+###############
+# Built-in    #
+###############
 
+zmodule k
 zmodule git
 zmodule fzf
+zmodule ssh
 zmodule input
 zmodule direnv
 zmodule archive
 zmodule utility
+zmodule exa # must come after utility module
 zmodule termtitle
-zmodule environment
+zmodule run-help
+zmodule magic-enter
 
-zmodule joke/zim-yq
-zmodule joke/zim-helm
-zmodule joke/zim-kubectl
-zmodule joke/zim-github-cli
-
-####################
-# Modules (Custom) #
-####################
+###############
+# Personal    #
+###############
 
 zmodule steelshot/dotfiles
 
-zmodule Thearas/zsh-watch
+###############
+# Plugins     #
+###############
+
 zmodule none9632/zsh-sudo
 zmodule amogus07/zsh-command-not-found
 
-###########
-# Theming #
-###########
+###############
+# Theming     #
+###############
 
 zmodule trapd00r/LS_COLORS --source lscolors.sh
 zmodule romkatv/powerlevel10k --use degit
@@ -40,12 +42,21 @@ zmodule romkatv/powerlevel10k --use degit
 zmodule zsh-users/zsh-completions --fpath src
 zmodule MenkeTechnologies/zsh-more-completions
 
+# Must be last after all completion modules
 zmodule completion
 
-#############
-# Last Init #
-#############
+###############
+# Extensions  #
+###############
 
 zmodule 3v1n0/zsh-bash-completions-fallback
+zmodule Tarrasch/zsh-bd
+zmodule olets/zsh-abbr
+zmodule MichaelAquilina/zsh-you-should-use
+zmodule hlissner/zsh-autopair
+zmodule ael-code/zsh-colored-man-pages
+zmodule wfxr/forgit
 zmodule zsh-users/zsh-syntax-highlighting
 zmodule Aloxaf/fzf-tab
+zmodule zsh-users/zsh-history-substring-search
+zmodule zsh-users/zsh-autosuggestions
