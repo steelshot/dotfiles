@@ -1,3 +1,5 @@
+# shellcheck shell=zsh
+
 # -----------------
 # p10k configuration
 # -----------------
@@ -5,19 +7,20 @@
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
+# shellcheck disable=SC2296
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  # shellcheck source=/dev/null
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+# shellcheck source=/dev/null
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # -----------------
 # Zsh configuration
 # -----------------
 
-# Remove older command from the history if a duplicate is to be added.
-setopt HIST_IGNORE_ALL_DUPS
 
 # Set editor default keymap to emacs (`-e`) or vi (`-v`)
 bindkey -e
@@ -45,25 +48,27 @@ zstyle ':zim' disable-version-check yes
 # Module configuration
 # --------------------
 
+# CLI tools to generate and cache zsh completions for.
+# Format: tool -> arguments passed to tool to produce zsh completion script
+typeset -gA _ZSH_TOOL_COMPLETIONS=(
+  yq      "shell-completion zsh"
+  gh      "completion -s zsh"
+  helm    "completion zsh"
+)
+
 # Append `../` to your input for each `.` you type after an initial `..`
 #zstyle ':zim:input' double-dot-expand yes
-
-# Disable fallback completion lazy loading to instead load them all at once
-ZSH_BASH_COMPLETIONS_FALLBACK_LAZYLOAD_DISABLE=true
 
 # Set a custom terminal title format using prompt expansion escape sequences.
 # See http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html#Simple-Prompt-Escapes
 # If none is provided, the default '%n@%m: %~' is used.
 #zstyle ':zim:termtitle' format '%1~'
 
-# Set what highlighters will be used.
-# See https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/docs/highlighters.md
-ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
-
-# Customize the main highlighter styles.
-# See https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/docs/highlighters/main.md#how-to-tweak-it
-#typeset -A ZSH_HIGHLIGHT_STYLES
-#ZSH_HIGHLIGHT_STYLES[comment]='fg=242'
+# Use eza instead of ls -AF for magic-enter directory listing (falls back to ls if eza not installed)
+zstyle ':zim:magic-enter' commands \
+    'if (( ${#dirstack} )) print -P %F{244}${${(Dq+)dirstack}//\//%f\/%F{244}}%f' \
+    '(( ${+commands[eza]} )) && eza -A --group-directories-first || ls -AF' \
+    'git --no-pager status -sb --untracked-files=no 2>/dev/null'
 
 # ------------------
 # Initialize modules
@@ -72,23 +77,25 @@ ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 ZIM_HOME=${ZDOTDIR:-${HOME}}/.zim
 
 # Download zimfw plugin manager if missing.
-if [[ ! -e ${ZIM_HOME}/zimfw.zsh ]]; then
+if [[ ! -e "${ZIM_HOME}/zimfw.zsh" ]]; then
   if (( ${+commands[curl]} )); then
-    curl -fsSL --create-dirs -o ${ZIM_HOME}/zimfw.zsh \
+    curl -fsSL --create-dirs -o "${ZIM_HOME}/zimfw.zsh" \
         https://github.com/zimfw/zimfw/releases/latest/download/zimfw.zsh
   else
-    mkdir -p ${ZIM_HOME} && wget -nv -O ${ZIM_HOME}/zimfw.zsh \
+    mkdir -p "${ZIM_HOME}" && wget -nv -O "${ZIM_HOME}/zimfw.zsh" \
         https://github.com/zimfw/zimfw/releases/latest/download/zimfw.zsh
   fi
 fi
 
 # Install missing modules, and update ${ZIM_HOME}/init.zsh if missing or outdated.
-if [[ ! ${ZIM_HOME}/init.zsh -nt ${ZIM_CONFIG_FILE:-${ZDOTDIR:-${HOME}}/.zimrc} ]]; then
-  source ${ZIM_HOME}/zimfw.zsh init
+if [[ ! "${ZIM_HOME}/init.zsh" -nt "${ZIM_CONFIG_FILE:-${ZDOTDIR:-${HOME}}/.zimrc}" ]]; then
+  # shellcheck source=/dev/null
+  source "${ZIM_HOME}/zimfw.zsh" init
 fi
 
 # Initialize modules.
-source ${ZIM_HOME}/init.zsh
+# shellcheck source=/dev/null
+source "${ZIM_HOME}/init.zsh"
 
 # ------------------------------
 # Post-init module configuration
@@ -99,10 +106,24 @@ zstyle -d ':completion:*' format
 zstyle ':completion:*:descriptions' format '[%d]'
 
 # set list-colors to enable filename colorizing
+# shellcheck disable=SC2296,SC2086
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 
 # force zsh not to show completion menu, which allows fzf-tab to capture the unambiguous prefix
 zstyle ':completion:*' menu no
 
-# preview directory's content with eza when completing cd
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+# disable sort when completing git checkout
+zstyle ':completion:*:git-checkout:*' sort false
+
+# switch groups with < and > instead of F1/F2
+zstyle ':fzf-tab:*' switch-group '<' '>'
+
+# press tab to accept completion instead of enter
+zstyle ':fzf-tab:*' fzf-flags --bind=tab:accept
+
+# preview directory's content with eza when completing cd (falls back to ls)
+# shellcheck disable=SC2016
+zstyle ':fzf-tab:complete:cd:*' fzf-preview '(( ${+commands[eza]} )) && eza -1 --color=always $realpath || ls -1 $realpath'
+
+# Initialize zoxide (must be after compinit)
+(( ${+commands[zoxide]} )) && eval "$(zoxide init zsh)"

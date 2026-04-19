@@ -22,19 +22,41 @@
 # SOFTWARE.
 #
 
-[[ -n "$skip_dotfile_compare" ]] && return
+## Suggest modern tool replacements when legacy commands are used.
+# Runs in preexec so output bypasses the command's redirections/pipelines.
+# Writes to /dev/tty so it can't leak into captured output, and silently
+# no-ops when no tty is present (cron, CI, etc).
 
-local sh name home
-for sh in "${0:h}"/../dotfiles/.*(.); do
-  name="${sh:t}"
-  home="$HOME/$name"
-  if [[ ! -e "$home" ]]; then
-    print -P "$name %F{red}is missing%f"
-  elif ! command cmp -s "$sh" "$home"; then
-    if [[ "$sh" -nt "$home" ]]; then
-      print -P "$name %F{red}is outdated%f"
-    else
-      print -P "$name %F{yellow}differs%f"
-    fi
-  fi
-done
+# Pipe-separated candidates; first one found in $PATH wins (handles fdfind/batcat).
+typeset -gA ZSH_SUGGEST_MAP=(
+  find  'fd|fdfind'
+  grep  'rg'
+  cat   'bat|batcat'
+  diff  'delta'
+  ls    'eza|exa'
+  du    'dust'
+  df    'duf'
+  ps    'procs'
+  top   'btop|btm'
+  sed   'sd'
+  cut   'choose'
+)
+
+_zsh_suggest_better() {
+  # $2 is the post-alias form, so users with `alias find=fd` never get nagged.
+  local first=${${(z)2}[1]}
+  local candidates=${ZSH_SUGGEST_MAP[$first]}
+  [[ -z $candidates ]] && return
+
+  local better c
+  for c in ${(s:|:)candidates}; do
+    (( ${+commands[$c]} )) && { better=$c; break }
+  done
+  [[ -z $better ]] && return
+  [[ -w /dev/tty ]] || return
+
+  print -P "%F{244}hint:%f %B$first%b → consider %F{6}%B$better%b%f" >/dev/tty
+}
+
+autoload -Uz add-zsh-hook
+add-zsh-hook preexec _zsh_suggest_better

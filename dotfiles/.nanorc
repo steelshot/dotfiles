@@ -1,5 +1,11 @@
 include /usr/share/nano/*.nanorc
 
+set zap
+set softwrap
+set atblanks
+set indicator
+set smarthome
 set tabsize 4
 set autoindent
 set linenumbers
+set modernbindings
