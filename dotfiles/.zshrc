@@ -110,3 +110,11 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview '(( ${+commands[eza]} )) && eza -1 -
 
 # Initialize zoxide (must be after compinit)
 (( ${+commands[zoxide]} )) && eval "$(zoxide init zsh)"
+
+# --------
+# Aliases
+# --------
+
+# nano: enable modern (CUA-style) key bindings. `set modernbindings` isn't a
+# valid nanorc option; the feature is CLI-only via --modernbindings.
+(( ${+commands[nano]} )) && alias nano='nano --modernbindings'
