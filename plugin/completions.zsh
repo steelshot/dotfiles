@@ -22,7 +22,13 @@
 # SOFTWARE.
 #
 
-(( ${#_ZSH_TOOL_COMPLETIONS} == 0 )) && return
+# Default CLI tool completions. Pre-declare `_ZSH_TOOL_COMPLETIONS` in ~/.zshenv
+# to add your own entries; defaults fill in for keys you didn't set (user wins
+# on key conflicts).
+typeset -gA _ZSH_TOOL_COMPLETIONS
+: ${_ZSH_TOOL_COMPLETIONS[yq]:="shell-completion zsh"}
+: ${_ZSH_TOOL_COMPLETIONS[gh]:="completion -s zsh"}
+: ${_ZSH_TOOL_COMPLETIONS[helm]:="completion zsh"}
 
 _zsh_setup_completions() {
   local compdir="${_DOTFILES_MODULE_ROOT}/functions"

@@ -28,6 +28,8 @@
   local sh name home
   for sh in "$1"/dotfiles/.*(.); do
     name="${sh:t}"
+    # .zshenv is a user-local customisation point; don't nag about drift.
+    [[ $name == .zshenv ]] && continue
     home="$HOME/$name"
     if [[ ! -e "$home" ]]; then
       print -P "$name %F{red}is missing%f"

@@ -26,20 +26,21 @@
 # preexec output bypasses the command's own redirections; /dev/tty keeps it
 # off captured output and silently no-ops when there's no tty (cron, CI).
 
-# Pipe-separated candidates — first found in $PATH wins (handles fdfind/batcat).
-typeset -gA ZSH_SUGGEST_MAP=(
-  find  'fd|fdfind'
-  grep  'rg'
-  cat   'bat|batcat'
-  diff  'delta'
-  ls    'eza|exa'
-  du    'dust'
-  df    'duf'
-  ps    'procs'
-  top   'btop|btm'
-  sed   'sd'
-  cut   'choose'
-)
+# Legacy -> modern tool suggestions. Pipe-separated candidates; first found in
+# $PATH wins (handles fdfind/batcat). Pre-declare `ZSH_SUGGEST_MAP` in ~/.zshenv
+# to add your own; defaults fill in for keys you didn't set (user wins).
+typeset -gA ZSH_SUGGEST_MAP
+: ${ZSH_SUGGEST_MAP[find]:="fd|fdfind"}
+: ${ZSH_SUGGEST_MAP[grep]:="rg"}
+: ${ZSH_SUGGEST_MAP[cat]:="bat|batcat"}
+: ${ZSH_SUGGEST_MAP[diff]:="delta"}
+: ${ZSH_SUGGEST_MAP[ls]:="eza|exa"}
+: ${ZSH_SUGGEST_MAP[du]:="dust"}
+: ${ZSH_SUGGEST_MAP[df]:="duf"}
+: ${ZSH_SUGGEST_MAP[ps]:="procs"}
+: ${ZSH_SUGGEST_MAP[top]:="btop|btm"}
+: ${ZSH_SUGGEST_MAP[sed]:="sd"}
+: ${ZSH_SUGGEST_MAP[cut]:="choose"}
 
 _zsh_suggest_better() {
   # $2 is post-alias; aliasing find=fd means this never fires for that user.

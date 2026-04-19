@@ -49,9 +49,11 @@ zmodule completion
 ###############
 # Bindings    #
 ###############
-# Order matters: syntax-highlighting -> history-substring-search -> autosuggestions
+# Order matters: atuin -> syntax-highlighting -> history-substring-search -> autosuggestions
+# (atuin first so history-substring-search wins up/down)
 
 zmodule Aloxaf/fzf-tab
+zmodule atuinsh/atuin
 zmodule zsh-users/zsh-syntax-highlighting
 zmodule zsh-users/zsh-history-substring-search
 zmodule zsh-users/zsh-autosuggestions
