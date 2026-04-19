@@ -22,5 +22,6 @@
 # SOFTWARE.
 #
 
-source "${0:h}/configuration.zsh"
-for sh in "${0:h}"/plugin/*.zsh; do source "$sh"; done
+typeset -g _DOTFILES_MODULE_ROOT="${0:A:h}"
+source "${_DOTFILES_MODULE_ROOT}/configuration.zsh"
+for sh in "${_DOTFILES_MODULE_ROOT}"/plugin/*.zsh; do source "$sh"; done

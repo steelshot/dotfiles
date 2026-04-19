@@ -25,7 +25,7 @@
 (( ${#_ZSH_TOOL_COMPLETIONS} == 0 )) && return
 
 _zsh_setup_completions() {
-  local compdir="${0:h:h}/functions"
+  local compdir="${_DOTFILES_MODULE_ROOT}/functions"
   local tool subcmd compfile generated=0
 
   # fpath needs the dir even before it exists; compinit handles missing dirs.
