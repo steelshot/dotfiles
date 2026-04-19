@@ -22,22 +22,47 @@
 # SOFTWARE.
 #
 
+## History wrapper
+# `-i` opens atuin's TUI. `-c` wipes all history with confirmation
+function history() {
+  if [[ $1 == -i ]]; then
+    (( ${+commands[atuin]} )) || { print -Pu2 "%F{red}history: -i requires atuin%f"; return 1 }
+    atuin search -i
+    return
+  fi
 
-## Don't save commands that returned 127 (command not found).
-# Uses precmd rather than zshaddhistory because $? at zshaddhistory time
-# reflects the previous command, not the one just entered.
-_zsh_history_filter_127() {
-  local last_status=$?
-  (( last_status == 127 )) || return 0
+  if [[ $1 == -c ]]; then
+    print -n "This will wipe all history. Continue? [y/N] "
+    local REPLY
+    read -k 1
+    print
+    [[ $REPLY = [yY] ]] || return 0
+    (( ${+commands[atuin]} )) && command rm -f "${XDG_DATA_HOME:-$HOME/.local/share}/atuin/history.db"*
+    fc -p /dev/null
+    print -P "%F{green}History cleared.%f"
+    return
+  fi
 
-  # $history[$HISTCMD] is the exact last command; fc -ln -1 can return multiple entries.
-  local last_cmd=$history[$HISTCMD]
-  [[ -z $last_cmd ]] && return
-
-  local HISTORY_IGNORE="${(b)last_cmd}"
-  fc -W
-  fc -R "$HISTFILE"
+  (( ${+commands[atuin]} )) && _dotfiles_history_reload
+  builtin fc -l "${@:-1}"
 }
 
-autoload -Uz add-zsh-hook
-add-zsh-hook precmd _zsh_history_filter_127
+## Seed $history from atuin
+# Self-removing precmd hook seeds on first prompt (masked by p10k instant-prompt);
+# `history` re-calls in-process for fresh reads.
+_dotfiles_history_reload() {
+  local tmp
+  tmp=$(mktemp) || return
+  atuin history list --cmd-only --reverse 2>/dev/null > "$tmp"
+  fc -R "$tmp"
+  rm -f "$tmp"
+}
+
+if (( ${+commands[atuin]} )); then
+  _dotfiles_history_load_once() {
+    add-zsh-hook -d precmd _dotfiles_history_load_once
+    _dotfiles_history_reload
+  }
+  autoload -Uz add-zsh-hook
+  add-zsh-hook precmd _dotfiles_history_load_once
+fi
