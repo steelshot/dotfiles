@@ -14,7 +14,6 @@ zmodule utility
 zmodule exa
 zmodule termtitle
 zmodule run-help
-zmodule magic-enter
 
 # Personal
 zmodule steelshot/dotfiles
@@ -27,8 +26,6 @@ zmodule none9632/zsh-sudo
 zmodule amogus07/zsh-command-not-found
 zmodule olets/zsh-abbr --use git
 zmodule MichaelAquilina/zsh-you-should-use
-zmodule ael-code/zsh-colored-man-pages --source colored-man-pages.plugin.zsh
-zmodule wfxr/forgit
 
 # Theming
 zmodule trapd00r/LS_COLORS --source lscolors.sh
@@ -44,10 +41,6 @@ zmodule 3v1n0/zsh-bash-completions-fallback
 
 # Must be last after all completion modules
 zmodule completion
-
-# Modules that call `compdef` at source time must load after `completion`
-# (which runs `compinit` and thus defines `compdef`).
-zmodule Tarrasch/zsh-bd --source bd.zsh
 
 ###############
 # Bindings    #

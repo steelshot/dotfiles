@@ -42,7 +42,6 @@ zstyle ':zim' disable-version-check yes
 # Module configuration
 # --------------------
 
-
 # Append `../` to your input for each `.` you type after an initial `..`
 #zstyle ':zim:input' double-dot-expand yes
 
@@ -50,12 +49,6 @@ zstyle ':zim' disable-version-check yes
 # See http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html#Simple-Prompt-Escapes
 # If none is provided, the default '%n@%m: %~' is used.
 #zstyle ':zim:termtitle' format '%1~'
-
-# Use eza instead of ls -AF for magic-enter directory listing (falls back to ls if eza not installed)
-zstyle ':zim:magic-enter' commands \
-    'if (( ${#dirstack} )) print -P %F{244}${${(Dq+)dirstack}//\//%f\/%F{244}}%f' \
-    '(( ${+commands[eza]} )) && eza -A --group-directories-first || ls -AF' \
-    'git --no-pager status -sb --untracked-files=no 2>/dev/null'
 
 # ------------------
 # Initialize modules
