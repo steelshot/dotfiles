@@ -45,7 +45,7 @@ confirm "%F{red}%BThis will remove all your zsh dotfiles and purge zim caches.%b
 () {
   local tool
   print -P "%F{244}Checking recommended tools:%f"
-  for tool in eza zoxide fzf direnv bat fd rg delta btop dust duf procs kubectl helm gh yq nano; do
+  for tool in eza zoxide fzf direnv bat fd rg delta btop dust duf procs tldr kubectl helm gh yq nano; do
     if (( ${+commands[$tool]} )); then
       print -P "  %F{green}✔%f %B${tool}%b %F{244}${commands[$tool]}%f"
     else

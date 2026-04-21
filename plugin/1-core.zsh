@@ -31,16 +31,17 @@ typeset -gA DOTFILES_COMPLETIONS # binary → completion subcommand
 
 : ${DOTFILES_ALIASES[nano]:="nano --modernbindings"}
 : ${DOTFILES_ALIASES[k]:="kubectl"}
-: ${DOTFILES_ALIASES[cat]:="bat --paging=never"}
+: ${DOTFILES_ALIASES[cat]:="bat -Pp"}
 : ${DOTFILES_ALIASES[top]:="btop"}
 : ${DOTFILES_ALIASES[du]:="dust"}
 : ${DOTFILES_ALIASES[df]:="duf"}
-: ${DOTFILES_ALIASES[get]:="wget --continue --progress=bar --timestamping"}
+: ${DOTFILES_ALIASES[get]:="wget -cNq --show-progress"}
 : ${DOTFILES_ALIASES[ls]:="eza --group-directories-first"}
 : ${DOTFILES_ALIASES[ll]:="ls -l --git"}
 : ${DOTFILES_ALIASES[l]:="ll -a"}
 : ${DOTFILES_ALIASES[lah]:="ll -ah"}
 
+: ${DOTFILES_SUGGEST[man]:="tldr"}
 : ${DOTFILES_SUGGEST[find]:="fd|fdfind"}
 : ${DOTFILES_SUGGEST[diff]:="delta"}
 : ${DOTFILES_SUGGEST[ps]:="procs"}
@@ -92,7 +93,7 @@ fi
 (( ${+commands[safe-rm]} && ! ${+commands[safe-rmdir]} )) && alias rm=safe-rm
 
 ## Download — curl fallback if wget not installed
-(( ! ${+commands[wget]} )) && : ${DOTFILES_ALIASES[get]:="curl --continue-at - --location --progress-bar --remote-name --remote-time"}
+(( ! ${+commands[wget]} )) && : ${DOTFILES_ALIASES[get]:="curl -C - -LOR#"}
 
 ## User-defined (DOTFILES_ALIASES)
 # Resolves alias chains through the map to find the ultimate binary before setting.
@@ -119,18 +120,19 @@ unset DOTFILES_ALIASES
 # ─── Suggestions ─────────────────────────────────────────────────────────────
 
 () {
-  local -A map=("${(@kv)DOTFILES_SUGGEST}")
+  typeset -gA _dotfiles_map=("${(@kv)DOTFILES_SUGGEST}")
   unset DOTFILES_SUGGEST
 
   # Reverse alias map is built on first prompt so all modules have loaded their aliases.
-  local -A raliases
+  typeset -gA _dotfiles_raliases
   _dotfiles_build_raliases() {
     add-zsh-hook -d precmd _dotfiles_build_raliases
     local a exp
     for a in ${(k)aliases}; do
       exp=${aliases[$a]}
       [[ ${#a} -ge ${#exp} ]] && continue
-      [[ -z ${raliases[$exp]} || ${#a} -lt ${#raliases[$exp]} ]] && raliases[$exp]=$a
+      [[ -z ${_dotfiles_raliases[$exp]} ]] || (( ${#a} < ${#_dotfiles_raliases[$exp]} )) || continue
+      _dotfiles_raliases[$exp]=$a
     done
   }
   add-zsh-hook precmd _dotfiles_build_raliases
@@ -140,7 +142,7 @@ unset DOTFILES_ALIASES
     [[ -w /dev/tty ]] || return
 
     local first=${${(z)expanded}[1]}
-    local candidates=${map[$first]}
+    local candidates=${_dotfiles_map[$first]}
     if [[ -n $candidates ]]; then
       local better c
       for c in ${(s:|:)candidates}; do
@@ -151,9 +153,9 @@ unset DOTFILES_ALIASES
     fi
 
     local exp_candidate shorter
-    for exp_candidate in ${(k)raliases}; do
+    for exp_candidate in ${(k)_dotfiles_raliases}; do
       [[ $expanded != $exp_candidate && $expanded != "$exp_candidate "* ]] && continue
-      shorter=${raliases[$exp_candidate]}
+      shorter=${_dotfiles_raliases[$exp_candidate]}
       [[ ${${(z)typed}[1]} == $shorter ]] && continue
       print -P "%F{244}hint:%f %B${(q)exp_candidate}%b → consider alias %F{6}%B$shorter%b%f" >/dev/tty
       break
