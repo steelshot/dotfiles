@@ -50,16 +50,17 @@ setopt no_bg_nice     # don't lower priority of background jobs
 setopt no_check_jobs  # no job status report on shell exit
 setopt no_hup         # don't send SIGHUP to jobs on shell exit
 
-HISTFILE=/dev/null
+HISTFILE=${ZDOTDIR:-$HOME}/.zsh_history
 (( HISTSIZE < 50000 )) && HISTSIZE=50000
-SAVEHIST=0
+SAVEHIST=$HISTSIZE
 
-setopt hist_verify
+setopt hist_expire_dups_first # expire duplicates first when HISTFILE exceeds HISTSIZE
+setopt hist_ignore_all_dups   # remove older duplicate entries
+setopt hist_ignore_space      # don't save commands prefixed with a space
+setopt hist_verify            # show history expansion before executing
+setopt share_history          # share history between sessions
 
 ## Module pre-init configuration
-
-# zsh-bash-completions-fallback (https://github.com/3v1n0/zsh-bash-completions-fallback)
-ZSH_BASH_COMPLETIONS_FALLBACK_LAZYLOAD_DISABLE=true
 
 # zsh-syntax-highlighting (https://github.com/zsh-users/zsh-syntax-highlighting)
 # See https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/docs/highlighters.md
@@ -68,3 +69,6 @@ ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 # zsh-autosuggestions (https://github.com/zsh-users/zsh-autosuggestions)
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)  # fall back to completion when no history match
 ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20             # disable suggestions for large pastes
+
+## fzf — use tmux popups when inside tmux
+[[ -n $TMUX ]] && export FZF_TMUX=1 FZF_TMUX_OPTS='-p80%,60%'

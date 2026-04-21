@@ -1,3 +1,9 @@
+# Skip all interactive configuration for agent/tool sessions in Cursor
+if [[ -n $CURSOR_AGENT ]]; then
+  unset HISTFILE
+  return
+fi
+
 # -----------------
 # p10k configuration
 # -----------------
@@ -99,7 +105,4 @@ zstyle ':fzf-tab:*' switch-group '<' '>'
 zstyle ':fzf-tab:*' fzf-flags --bind=tab:accept
 
 # preview directory's content with eza when completing cd (falls back to ls)
-zstyle ':fzf-tab:complete:cd:*' fzf-preview '(( ${+commands[eza]} )) && eza -1 --color=always $realpath || ls -1 $realpath'
-
-# Initialize zoxide (must be after compinit)
-(( ${+commands[zoxide]} )) && eval "$(zoxide init zsh)"
+zstyle ':fzf-tab:complete:cd:*' fzf-preview '(( ${+commands[eza]} )) && eza -1 --color=always "$realpath" || ls -1 "$realpath"'

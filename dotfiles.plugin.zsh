@@ -23,5 +23,25 @@
 #
 
 typeset -g _DOTFILES_MODULE_ROOT="${0:A:h}"
+
+## Dotfile drift check
+[[ -z "$skip_dotfile_compare" ]] && () {
+  local src="$1/dotfiles" sh rel home
+  for sh in "$src"/**/*(D.); do
+    rel=${sh#$src/}
+    [[ $rel == .zshenv ]] && continue
+    home="$HOME/$rel"
+    if [[ ! -e "$home" ]]; then
+      print -P "$rel %F{red}is missing%f" >/dev/tty
+    elif ! command cmp -s "$sh" "$home"; then
+      if [[ "$sh" -nt "$home" ]]; then
+        print -P "$rel %F{red}is outdated%f" >/dev/tty
+      else
+        print -P "$rel %F{yellow}differs%f" >/dev/tty
+      fi
+    fi
+  done
+} "${_DOTFILES_MODULE_ROOT}"
+
 source "${_DOTFILES_MODULE_ROOT}/configuration.zsh"
 for sh in "${_DOTFILES_MODULE_ROOT}"/plugin/*.zsh; do source "$sh"; done
