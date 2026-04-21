@@ -22,33 +22,31 @@
 # SOFTWARE.
 #
 
-## History wrapper
-# `-c` wipes all history (atuin DB + current session) with confirmation.
-function history() {
-  if [[ $1 == -c ]]; then
-    print -n "This will wipe all history. Continue? [y/N] "
-    local REPLY
-    read -k 1
-    print
-    [[ $REPLY = [yY] ]] || return 0
-    (( ${+commands[atuin]} )) && command rm -f "${XDG_DATA_HOME:-$HOME/.local/share}/atuin/history.db"*
-    fc -p /dev/null
-    print -P "%F{green}History cleared.%f"
-    return
-  fi
-  builtin fc -l "${@:-1}"
-}
+## Tool shell integrations — deferred to first prompt so compinit has run.
+# Pre-declare DOTFILES_HOOKS in ~/.zshenv to add your own or override defaults.
+# Key = binary name, value = init command. Hook is cached and recompiled when binary changes.
+typeset -gA DOTFILES_HOOKS
+: ${DOTFILES_HOOKS[zoxide]:="zoxide init zsh"}
+: ${DOTFILES_HOOKS[direnv]:="direnv hook zsh"}
 
-## Seed $history from atuin on first prompt (hook self-removes).
-## p10k instant-prompt hides the load time.
-_dotfiles_history_seed() {
-  add-zsh-hook -d precmd _dotfiles_history_seed
-  local line
-  while IFS= read -r line; do
-    [[ -n $line ]] && print -s -- "$line"
-  done < <(atuin history list --reverse --format '{command}' 2>/dev/null)
-}
+_dotfiles_hooks_init() {
+  add-zsh-hook -d precmd _dotfiles_hooks_init
+  zmodload -F zsh/stat b:zstat
 
-if (( ${+commands[atuin]} )); then
-  add-zsh-hook precmd _dotfiles_history_seed
-fi
+  local binary cmd hook
+  for binary in ${(k)DOTFILES_HOOKS}; do
+    (( ${+commands[$binary]} )) || continue
+    cmd=${DOTFILES_HOOKS[$binary]}
+    hook="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles-hook-${binary}.zsh"
+    if [[ ! -s $hook ]] || {
+      local -a t  # t[1]=binary mtime, t[2]=hook mtime
+      zstat -A t +mtime ${commands[$binary]} $hook 2>/dev/null && [[ ${t[1]} -gt ${t[2]} ]]
+    }; then
+      ${(z)cmd} >! "$hook" && zcompile -UR "$hook"
+    fi
+    source "$hook"
+  done
+  unset -f _dotfiles_hooks_init
+  unset DOTFILES_HOOKS
+}
+add-zsh-hook precmd _dotfiles_hooks_init
