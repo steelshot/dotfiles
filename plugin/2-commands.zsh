@@ -31,7 +31,10 @@ function history() {
     read -k 1 REPLY </dev/tty
     print >/dev/tty
     [[ $REPLY = [yY] ]] || return 0
-    fc -p /dev/null
+    local _hist_tmp=$(mktemp)
+    fc -p "$_hist_tmp"
+    fc -P
+    rm -f "$_hist_tmp"
     : >| "${HISTFILE}"
     print -P "%F{green}History cleared.%f" >/dev/tty
     return
