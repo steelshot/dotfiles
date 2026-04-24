@@ -43,9 +43,34 @@ confirm "%F{red}%BThis will remove all your zsh dotfiles and purge zim caches.%b
 
 # Inform about missing recommended CLI tools
 () {
+  local -a tools=(
+    # Shell enhancements
+    eza       # ls  → eza
+    zoxide    # cd  → zoxide
+    fzf       # fuzzy finder
+    direnv    # per-directory env vars
+    # File / text tools
+    bat       # cat → bat
+    fd        # find → fd
+    rg        # grep → ripgrep
+    delta     # diff → delta
+    sd        # sed  → sd
+    choose    # cut  → choose
+    # System monitoring
+    btop      # top  → btop (preferred)
+    htop      # top  → htop (fallback)
+    dust      # du   → dust
+    duf       # df   → duf
+    procs     # ps   → procs
+    # Docs & k8s
+    tldr      # man  → tldr
+    kubectl helm gh yq
+    # Editor
+    nano
+  )
   local tool
   print -P "%F{244}Checking recommended tools:%f"
-  for tool in eza zoxide fzf direnv bat fd rg delta btop dust duf procs tldr kubectl helm gh yq nano; do
+  for tool in $tools; do
     if (( ${+commands[$tool]} )); then
       print -P "  %F{green}✔%f %B${tool}%b %F{244}${commands[$tool]}%f"
     else
