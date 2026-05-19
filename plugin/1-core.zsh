@@ -163,8 +163,11 @@ unset DOTFILES_ALIASES
       # Pick the most specific (longest) match regardless of typed — checked after.
       [[ ${#exp_candidate} -gt ${#best_candidate} ]] && { best_candidate=$exp_candidate; best_shorter=$shorter }
     done
-    # Only hint if the user isn't already using the best alias.
+    # Only hint if the user isn't already using the best alias, and isn't
+    # already using an alias whose chain expands to the same command.
+    local typed_first=${typed%% *}
     [[ -n $best_shorter && $typed != $best_shorter && $typed != "$best_shorter "* ]] && \
+      [[ -z ${aliases[$typed_first]} ]] && \
       print -P "%F{244}hint:%f %B${(q)best_candidate}%b → consider alias %F{6}%B$best_shorter%b%f" >/dev/tty
   }
 }
