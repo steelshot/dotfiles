@@ -60,9 +60,7 @@ typeset -gA DOTFILES_COMPLETIONS # binary → completion subcommand
 
 # ─── Pager ───────────────────────────────────────────────────────────────────
 
-if (( ! ${+PAGER} )); then
-  (( ${+commands[less]} )) && export PAGER=less || export PAGER=more
-fi
+(( ${+PAGER} )) || export PAGER=${${commands[less]:+less}:-more}
 export LESS=${LESS:---ignore-case --jump-target=4 --LONG-PROMPT --no-init --quit-if-one-screen --RAW-CONTROL-CHARS}
 
 # ─── Colours ─────────────────────────────────────────────────────────────────
@@ -110,8 +108,7 @@ fi
     (( ${+commands[$w]} ))
   }
   for name in ${(k)DOTFILES_ALIASES}; do
-    local -a _candidates=(${(s:|:)DOTFILES_ALIASES[$name]})
-    for cmd in $_candidates; do
+    for cmd in ${(s:|:)DOTFILES_ALIASES[$name]}; do
       _dotfiles_alias_ok ${cmd%% *} && { alias $name="$cmd"; break }
     done
   done
@@ -141,34 +138,22 @@ unset DOTFILES_ALIASES
 
   _dotfiles_suggest_better() {
     local typed=$1 expanded=$2
-    [[ -w /dev/tty ]] || return
+    [[ -w /dev/tty && $typed == $expanded ]] || return
 
-    local -a _expanded_words=(${(z)expanded})
-    local first=${_expanded_words[1]}
-    local candidates=${_dotfiles_map[$first]}
-    if [[ -n $candidates ]]; then
-      local better c
-      for c in ${(s:|:)candidates}; do
-        # Check cache first; fall back to a live PATH lookup (hash caches the result).
-        (( ${+commands[$c]} || ${+functions[$c]} )) || hash $c 2>/dev/null || continue
-        better=$c; break
-      done
-      [[ -n $better ]] && print -P "%F{244}hint:%f %B$first%b → consider %F{6}%B$better%b%f" >/dev/tty
-    fi
-
-    local exp_candidate shorter best_candidate best_shorter
-    for exp_candidate in ${(k)_dotfiles_raliases}; do
-      [[ $expanded != $exp_candidate && $expanded != "$exp_candidate "* ]] && continue
-      shorter=${_dotfiles_raliases[$exp_candidate]}
-      # Pick the most specific (longest) match regardless of typed — checked after.
-      [[ ${#exp_candidate} -gt ${#best_candidate} ]] && { best_candidate=$exp_candidate; best_shorter=$shorter }
+    local first=${${(z)expanded}[1]} better c
+    for c in ${(s:|:)_dotfiles_map[$first]}; do
+      (( ${+commands[$c]} || ${+functions[$c]} )) || hash $c 2>/dev/null || continue
+      better=$c; break
     done
-    # Only hint if the user isn't already using the best alias, and isn't
-    # already using an alias whose chain expands to the same command.
-    local typed_first=${typed%% *}
-    [[ -n $best_shorter && $typed != $best_shorter && $typed != "$best_shorter "* ]] && \
-      [[ -z ${aliases[$typed_first]} ]] && \
-      print -P "%F{244}hint:%f %B${(q)best_candidate}%b → consider alias %F{6}%B$best_shorter%b%f" >/dev/tty
+    [[ -n $better ]] && print -P "%F{244}hint:%f %B$first%b → consider %F{6}%B$better%b%f" >/dev/tty
+
+    local exp best_key best_alias
+    for exp in ${(k)_dotfiles_raliases}; do
+      [[ $expanded != $exp && $expanded != "$exp "* ]] && continue
+      [[ ${#exp} -gt ${#best_key} ]] && { best_key=$exp; best_alias=${_dotfiles_raliases[$exp]} }
+    done
+    [[ -n $best_alias && $typed != $best_alias && $typed != "$best_alias "* ]] && \
+      print -P "%F{244}hint:%f %B${(q)best_key}%b → consider alias %F{6}%B$best_alias%b%f" >/dev/tty
   }
 }
 add-zsh-hook preexec _dotfiles_suggest_better
@@ -178,25 +163,21 @@ add-zsh-hook preexec _dotfiles_suggest_better
 () {
   # zim registers this directory in fpath automatically via the module's functions/ dir
   local compdir="${_DOTFILES_MODULE_ROOT}/functions"
-  local tool subcmd compfile generated=0
+  local tool compfile generated=0
 
   for tool in ${(@k)DOTFILES_COMPLETIONS}; do
     (( ${+commands[$tool]} )) || continue
-    subcmd="${DOTFILES_COMPLETIONS[$tool]}"
     compfile="${compdir}/_${tool}"
     [[ -e $compfile && $compfile -nt ${commands[$tool]} ]] && continue
-
     [[ -d $compdir ]] || mkdir -p "$compdir" || return 1
-    if ${commands[$tool]} ${(z)subcmd} >| "$compfile"; then
+    if ${commands[$tool]} ${(z)${DOTFILES_COMPLETIONS[$tool]}} >| "$compfile"; then
       (( generated )) || print >/dev/tty
       print -P "%F{244}* Regenerated completions for %f%B${tool}%b%F{244}.%f" >/dev/tty
       generated=1
     fi
   done
 
-  if (( generated )); then
-    (( $+functions[compinit] )) && \
-      compinit -u -d "${ZSH_COMPDUMP:-${ZDOTDIR:-$HOME}/.zcompdump}"
-  fi
+  (( generated )) && (( $+functions[compinit] )) && \
+    compinit -u -d "${ZSH_COMPDUMP:-${ZDOTDIR:-$HOME}/.zcompdump}"
 }
 unset DOTFILES_COMPLETIONS
