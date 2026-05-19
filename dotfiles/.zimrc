@@ -30,7 +30,6 @@ zmodule romkatv/powerlevel10k --use degit
 ###############
 
 zmodule zsh-users/zsh-completions --fpath src
-zmodule MenkeTechnologies/zsh-more-completions
 zmodule 3v1n0/zsh-bash-completions-fallback
 
 # Must be last after all completion modules
