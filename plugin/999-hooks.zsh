@@ -50,3 +50,12 @@ _dotfiles_hooks_init() {
   unset DOTFILES_HOOKS
 }
 add-zsh-hook precmd _dotfiles_hooks_init
+
+## History filter — drop lines whose leading command doesn't exist.
+_dotfiles_hist_filter() {
+  local cmd=${${(z)1}[1]}
+  (( ${+commands[$cmd]} || ${+functions[$cmd]} || ${+aliases[$cmd]} || ${+builtins[$cmd]} )) && return 0
+  [[ ${reswords[(Ie)$cmd]} -gt 0 ]] && return 0
+  return 1
+}
+add-zsh-hook zshaddhistory _dotfiles_hist_filter
