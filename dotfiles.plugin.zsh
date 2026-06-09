@@ -25,11 +25,13 @@
 typeset -g _DOTFILES_MODULE_ROOT="${0:A:h}"
 
 ## Dotfile drift check
-[[ -z "$skip_dotfile_compare" ]] && () {
+() {
   local src="$1/dotfiles" sh rel home
+  local -a skip_list
+  skip_list=(.zshenv ${(s:;:)skip_dotfile_compare})
   for sh in "$src"/**/*(D.); do
     rel=${sh#$src/}
-    [[ $rel == .zshenv ]] && continue
+    [[ ${skip_list[(Ie)$rel]} -gt 0 ]] && continue
     home="$HOME/$rel"
     if [[ ! -e "$home" ]]; then
       print -P "$rel %F{red}is missing%f" >/dev/tty
