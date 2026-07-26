@@ -32,7 +32,7 @@ typeset -gA DOTFILES_COMPLETIONS # binary → completion subcommand
 : ${DOTFILES_ALIASES[nano]:="nano --modernbindings"}
 : ${DOTFILES_ALIASES[k]:="kubectl"}
 : ${DOTFILES_ALIASES[cat]:="bat -Pp"}
-: ${DOTFILES_ALIASES[top]:="btop|htop"}
+: ${DOTFILES_ALIASES[top]:="htop|btop"}
 : ${DOTFILES_ALIASES[du]:="dust"}
 : ${DOTFILES_ALIASES[df]:="duf"}
 : ${DOTFILES_ALIASES[get]:="wget -cNq --show-progress"}
