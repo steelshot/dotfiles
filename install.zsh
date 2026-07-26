@@ -61,8 +61,8 @@ confirm "%F{red}%BThis will remove all your zsh dotfiles and purge zim caches.%b
     sd        # sed  → sd
     choose    # cut  → choose
     # System monitoring
-    btop      # top  → btop (preferred)
-    htop      # top  → htop (fallback)
+    htop      # top  → htop (preferred)
+    btop      # top  → btop (fallback)
     dust      # du   → dust
     duf       # df   → duf
     procs     # ps   → procs
