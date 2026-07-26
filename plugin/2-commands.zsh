@@ -23,7 +23,6 @@
 #
 
 ## history — `-c` wipes current session and HISTFILE with confirmation.
-##           `-i` opens an interactive fzf picker to recall a command.
 function history() {
   if [[ $1 == -c ]]; then
     print -n "This will wipe all history. Continue? [y/N] " >/dev/tty
@@ -37,12 +36,6 @@ function history() {
     rm -f "$_hist_tmp"
     : >| "${HISTFILE}"
     print -P "%F{green}History cleared.%f" >/dev/tty
-    return
-  fi
-
-  if [[ $1 == -i ]]; then
-    (( ${+functions[fzf-history-widget]} )) || { print -P -u2 "%F{red}history -i: fzf widget not loaded.%f"; return 1 }
-    fzf-history-widget
     return
   fi
 
