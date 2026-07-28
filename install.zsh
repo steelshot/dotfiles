@@ -33,6 +33,8 @@ TARBALL="https://codeload.github.com/${REPO}/tar.gz/refs/heads/${BRANCH}"
 UNATTENDED=${DOTFILES_UNATTENDED:-0}
 TTY=/dev/tty; (( ${DOTFILES_QUIET:-0} )) && TTY=/dev/null
 
+(( ${+commands[cmp]} )) || { print -P "%F{red}install: cmp is required.%f" >$TTY; exit 1 }
+
 confirm() {
   (( UNATTENDED )) && return 0
   local reply
